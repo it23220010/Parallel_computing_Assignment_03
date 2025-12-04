@@ -1,0 +1,20 @@
+﻿# Executables
+*.exe
+
+# Object files
+*.o
+*.obj
+
+# Results and data files
+results/*.png
+results/*.txt
+results/*.csv
+
+# CUDA temporary files
+*.cudafe*
+*.fatbin*
+*.module_id
+
+# Editor files
+.vscode/
+*.swp
