@@ -12,22 +12,30 @@ import numpy as np
 import os
 import sys
 
-def run_cuda_test(array_size, block_size, num_blocks):
-    """Run CUDA program and get execution time"""
+def run_cuda_test(array_size, block_size, num_blocks, num_runs=3):
+    """Run CUDA program multiple times and return the best (minimum) execution time"""
     cuda_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "cuda", "minmax_cuda.exe"))
     cmd = [cuda_path, str(array_size), str(block_size), str(num_blocks)]
     
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-        
-        # Parse kernel execution time
-        for line in result.stdout.split('\n'):
-            if "Kernel execution time:" in line:
-                return float(line.split(":")[1].strip().split()[0])
-    except:
-        return None
+    best_time = None
     
-    return None
+    for run in range(num_runs):
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            
+            # Parse kernel execution time
+            for line in result.stdout.split('\n'):
+                if "Kernel execution time:" in line:
+                    exec_time = float(line.split(":")[1].strip().split()[0])
+                    
+                    # Keep the best (minimum) time
+                    if best_time is None or exec_time < best_time:
+                        best_time = exec_time
+                    break
+        except:
+            continue
+    
+    return best_time
 
 def get_serial_time(array_size):
     """Get serial execution time for speedup calculation"""
@@ -74,7 +82,7 @@ def main():
     execution_times = []
     valid_block_sizes = []
     
-    print("\nRunning CUDA tests...")
+    print("\nRunning CUDA tests (each config runs 3 times, taking best)...")
     for block_size in BLOCK_SIZES:
         print(f"  Testing block size {block_size}...", end=" ", flush=True)
         

@@ -19,24 +19,22 @@ clean:
 
 # Test with default parameters
 test: $(TARGET)
-	mpirun -np 4 ./$(TARGET) 1000000
+	mpirun -np 4 ./$(TARGET) 100000000
 
 # Performance testing with different process counts
 test_performance: $(TARGET)
 	@echo "Testing MPI performance with different process counts..."
-	@echo "Array size: 1000000"
+	@echo "Array size: 100000000"
 	@echo ""
 	@for procs in 1 2 4 8 16; do \
 		echo "Running with $$procs process(es):"; \
-		mpirun -np $$procs ./$(TARGET) 1000000; \
+		mpirun -np $$procs ./$(TARGET) 100000000; \
 		echo ""; \
 	done
 
-# Run with specific parameters
-run: $(TARGET)
-	@read -p "Enter number of processes: " procs; \
-	read -p "Enter array size: " size; \
-	mpirun -np $$procs ./$(TARGET) $$size
+# Run with default parameters (4 processes, 100M elements)
+run: all
+	mpirun -np 4 ./$(TARGET) 100000000
 
 # Debug build
 debug: $(SRC)

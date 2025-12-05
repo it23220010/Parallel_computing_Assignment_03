@@ -35,14 +35,25 @@ __global__ void find_min_kernel(const float* data, float* min_vals, int n) {
     
     __syncthreads();
     
-    // Parallel reduction in shared memory
-    for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
+    // Parallel reduction in shared memory with optimized loop
+    for (unsigned int s = blockDim.x / 2; s > 32; s >>= 1) {
         if (tid < s) {
             if (sdata[tid + s] < sdata[tid]) {
                 sdata[tid] = sdata[tid + s];
             }
         }
         __syncthreads();
+    }
+    
+    // Final warp reduction (no __syncthreads needed)
+    if (tid < 32) {
+        volatile float* smem = sdata;
+        if (blockDim.x >= 64 && smem[tid + 32] < smem[tid]) smem[tid] = smem[tid + 32];
+        if (blockDim.x >= 32 && smem[tid + 16] < smem[tid]) smem[tid] = smem[tid + 16];
+        if (smem[tid + 8] < smem[tid]) smem[tid] = smem[tid + 8];
+        if (smem[tid + 4] < smem[tid]) smem[tid] = smem[tid + 4];
+        if (smem[tid + 2] < smem[tid]) smem[tid] = smem[tid + 2];
+        if (smem[tid + 1] < smem[tid]) smem[tid] = smem[tid + 1];
     }
     
     // Write block's min to global memory
@@ -71,14 +82,25 @@ __global__ void find_max_kernel(const float* data, float* max_vals, int n) {
     
     __syncthreads();
     
-    // Parallel reduction in shared memory
-    for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
+    // Parallel reduction in shared memory with optimized loop
+    for (unsigned int s = blockDim.x / 2; s > 32; s >>= 1) {
         if (tid < s) {
             if (sdata[tid + s] > sdata[tid]) {
                 sdata[tid] = sdata[tid + s];
             }
         }
         __syncthreads();
+    }
+    
+    // Final warp reduction (no __syncthreads needed)
+    if (tid < 32) {
+        volatile float* smem = sdata;
+        if (blockDim.x >= 64 && smem[tid + 32] > smem[tid]) smem[tid] = smem[tid + 32];
+        if (blockDim.x >= 32 && smem[tid + 16] > smem[tid]) smem[tid] = smem[tid + 16];
+        if (smem[tid + 8] > smem[tid]) smem[tid] = smem[tid + 8];
+        if (smem[tid + 4] > smem[tid]) smem[tid] = smem[tid + 4];
+        if (smem[tid + 2] > smem[tid]) smem[tid] = smem[tid + 2];
+        if (smem[tid + 1] > smem[tid]) smem[tid] = smem[tid + 1];
     }
     
     // Write block's max to global memory

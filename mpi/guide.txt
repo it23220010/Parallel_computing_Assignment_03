@@ -1,0 +1,13 @@
+cd C:\Users\ShenalSD\Desktop\Parallel_computing_Assignment_03\openmp;
+.\minmax_openmp.exe 100000000
+
+
+cd C:\Users\ShenalSD\Desktop\Parallel_computing_Assignment_03\mpi
+mpiexec -n 4 .\minmax_mpi.exe 100000000
+
+cd C:\Users\ShenalSD\Desktop\Parallel_computing_Assignment_03\cuda
+.\minmax_cuda.exe 100000000 128 40000
+
+cd C:\Users\ShenalSD\Desktop\Parallel_computing_Assignment_03\scripts
+python openmp_eval.py
+python mpi_eval.py 

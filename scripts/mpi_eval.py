@@ -14,49 +14,58 @@ import sys
 import time
 from datetime import datetime
 
-def run_mpi_benchmark(array_size, num_processes):
+def run_mpi_benchmark(array_size, num_processes, num_runs=3):
     """
-    Run MPI program and extract execution time
+    Run MPI program multiple times and return the best (minimum) execution time
     
     Args:
         array_size (int): Size of array to process
         num_processes (int): Number of MPI processes
+        num_runs (int): Number of times to run (default: 3)
         
     Returns:
-        float: Execution time in seconds, or None if failed
+        float: Best execution time in seconds, or None if all runs failed
     """
     # Build command
     cmd = f"mpiexec -n {num_processes} ../mpi/minmax_mpi.exe {array_size}"
     
-    try:
-        # Execute command with timeout
-        result = subprocess.run(
-            cmd,
-            shell=True,
-            capture_output=True,
-            text=True,
-            timeout=60  # 1 minute timeout
-        )
-        
-        if result.returncode != 0:
-            print(f"  ✗ Failed with {num_processes} processes")
-            print(f"    Error: {result.stderr[:100]}")
-            return None
-        
-        # Parse output for execution time
-        for line in result.stdout.split('\n'):
-            if "Time taken:" in line:
-                time_str = line.split(":")[1].strip().split()[0]
-                return float(time_str)
-        
+    best_time = None
+    
+    for run in range(num_runs):
+        try:
+            # Execute command with timeout
+            result = subprocess.run(
+                cmd,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=60  # 1 minute timeout
+            )
+            
+            if result.returncode != 0:
+                continue
+            
+            # Parse output for execution time
+            for line in result.stdout.split('\n'):
+                if "Time taken:" in line:
+                    time_str = line.split(":")[1].strip().split()[0]
+                    exec_time = float(time_str)
+                    
+                    # Keep the best (minimum) time
+                    if best_time is None or exec_time < best_time:
+                        best_time = exec_time
+                    break
+            
+        except subprocess.TimeoutExpired:
+            continue
+        except Exception as e:
+            continue
+    
+    if best_time is None:
+        print(f"  ✗ Failed with {num_processes} processes")
         return None
-        
-    except subprocess.TimeoutExpired:
-        print(f"  ⏰ Timeout with {num_processes} processes")
-        return None
-    except Exception as e:
-        print(f"  ❌ Exception with {num_processes} processes: {e}")
-        return None
+    
+    return best_time
 
 def generate_performance_graphs():
     """
@@ -67,7 +76,7 @@ def generate_performance_graphs():
     print("=" * 60)
     
     # Configuration
-    ARRAY_SIZE = 1000000  # Fixed array size
+    ARRAY_SIZE = 100000000  # Fixed array size
     PROCESS_COUNTS = [1, 2, 4, 8, 16]
     
     # Storage for results
@@ -350,36 +359,16 @@ def main():
     if not check_prerequisites():
         sys.exit(1)
     
-    # Ask for array size
+    # Configuration
     print("\n" + "-" * 40)
     print("TEST CONFIGURATION")
     print("-" * 40)
     
-    default_size = 1000000
-    user_input = input(f"Enter array size (default: {default_size:,}): ").strip()
-    
-    if user_input:
-        try:
-            array_size = int(user_input)
-            if array_size <= 0:
-                print("⚠️  Array size must be positive. Using default.")
-                array_size = default_size
-        except ValueError:
-            print("⚠️  Invalid input. Using default.")
-            array_size = default_size
-    else:
-        array_size = default_size
-    
+    array_size = 100000000
     print(f"Using array size: {array_size:,}")
-    
-    # Confirm execution
-    print(f"\nThis will run MPI with process counts: [1, 2, 4, 8, 16]")
+    print(f"Process counts: [1, 2, 4, 8, 16]")
     print("Estimated time: 1-2 minutes")
-    
-    confirm = input("\nProceed with evaluation? (y/n): ").strip().lower()
-    if confirm != 'y':
-        print("Evaluation cancelled.")
-        sys.exit(0)
+    print("-" * 40)
     
     # Run evaluation
     try:

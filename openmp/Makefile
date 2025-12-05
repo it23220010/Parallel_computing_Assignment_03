@@ -11,13 +11,13 @@ $(TARGET): $(SRC)
 clean:
 	rm -f $(TARGET) *.o
 
-run: $(TARGET)
-	./$(TARGET) 1000000 4
+run: all
+	./$(TARGET) 100000000 8
 
 test_threads: $(TARGET)
 	for threads in 1 2 4 8 16; do \
 		echo "Testing with $$threads threads:"; \
-		./$(TARGET) 1000000 $$threads; \
+		./$(TARGET) 100000000 $$threads; \
 		echo ""; \
 	done
 

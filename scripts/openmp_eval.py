@@ -6,27 +6,37 @@ import numpy as np
 import os
 import time
 
-def run_openmp_test(array_size, num_threads):
-    """Run OpenMP implementation and extract execution time"""
-    cmd = [f"../openmp/minmax_openmp", str(array_size), str(num_threads)]
+def run_openmp_test(array_size, num_threads, num_runs=3):
+    """Run OpenMP implementation multiple times and return the best (minimum) execution time"""
+    cmd = [f"../openmp/minmax_openmp.exe", str(array_size), str(num_threads)]
     
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, cwd=os.getcwd())
-        output = result.stdout
-        
-        # Parse execution time
-        for line in output.split('\n'):
-            if "Time taken:" in line:
-                time_str = line.split(":")[1].strip().split()[0]
-                return float(time_str)
-    except Exception as e:
-        print(f"Error running OpenMP with {num_threads} threads: {e}")
+    best_time = None
     
-    return None
+    for run in range(num_runs):
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, cwd=os.getcwd())
+            output = result.stdout
+            
+            # Parse execution time
+            for line in output.split('\n'):
+                if "Time taken:" in line:
+                    time_str = line.split(":")[1].strip().split()[0]
+                    exec_time = float(time_str)
+                    
+                    # Keep the best (minimum) time
+                    if best_time is None or exec_time < best_time:
+                        best_time = exec_time
+                    break
+        except Exception as e:
+            if run == 0:  # Only print error on first run
+                print(f"Error running OpenMP with {num_threads} threads: {e}")
+            continue
+    
+    return best_time
 
 def evaluate_openmp():
     """Perform OpenMP performance evaluation"""
-    array_size = 1000000  # Fixed array size for testing
+    array_size = 100000000  # Fixed array size for testing
     thread_counts = [1, 2, 4, 8, 16]
     
     execution_times = []
@@ -40,12 +50,12 @@ def evaluate_openmp():
     
     # Run tests for each thread count
     for threads in thread_counts:
-        print(f"Testing with {threads} thread(s)...")
+        print(f"Testing with {threads} thread(s) (running 3 times, taking best)...")
         exec_time = run_openmp_test(array_size, threads)
         
         if exec_time is not None:
             execution_times.append(exec_time)
-            print(f"  Execution time: {exec_time:.6f} seconds")
+            print(f"  Best execution time: {exec_time:.6f} seconds")
     
     # Calculate speedup (relative to single thread)
     if execution_times:
@@ -111,7 +121,7 @@ def save_results(thread_counts, execution_times, speedups):
         f.write("OpenMP Performance Evaluation Results\n")
         f.write("=" * 50 + "\n")
         f.write(f"Test Date: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-        f.write(f"Array Size: 1000000\n")
+        f.write(f"Array Size: 100000000\n")
         f.write("\n" + "-" * 50 + "\n")
         f.write("Threads | Time (s) | Speedup\n")
         f.write("-" * 50 + "\n")

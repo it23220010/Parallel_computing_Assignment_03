@@ -45,7 +45,7 @@ clean:
 
 # Test with default parameters
 test: $(TARGET)
-	./$(TARGET) 1000000 256 256
+	./$(TARGET) 100000000 128 40000
 
 # Quick performance test with different block sizes
 test_blocks: $(TARGET)
@@ -83,12 +83,9 @@ test_comprehensive: $(TARGET)
 		done; \
 	done
 
-# Run with specific parameters
-run: $(TARGET)
-	@read -p "Enter array size: " size; \
-	read -p "Enter block size: " block; \
-	read -p "Enter number of blocks: " blocks; \
-	./$(TARGET) $$size $$block $$blocks
+# Run with default parameters (100M elements, 128 threads/block, 40000 blocks)
+run: all
+	./$(TARGET) 100000000 128 40000
 
 # Display GPU information
 gpu_info:
