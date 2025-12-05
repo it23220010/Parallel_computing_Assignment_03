@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
     
     printf("CUDA Min-Max Normalization\n");
     printf("Array size: %d\n", n);
-    printf("Block size: %d\n", block_size);
+    printf("Block size: \033[32m%d\033[0m\n", block_size);
     printf("Number of blocks: %d\n", num_blocks);
     printf("Total threads: %d\n", block_size * num_blocks);
     printf("\n");
@@ -311,7 +311,7 @@ int main(int argc, char* argv[]) {
     
     // Display timing
     printf("Performance:\n");
-    printf("  Kernel execution time: %.3f ms\n", kernel_time);
+    printf("  Kernel execution time: \033[32m%.3f ms\033[0m\n", kernel_time);
     printf("  Total GPU time (incl. memcpy): %.3f ms\n", total_cpu_time);
     printf("  Memory bandwidth: %.2f GB/s\n", 
            (3.0f * n * sizeof(float) / (kernel_time / 1000.0f)) / 1e9);

@@ -6,12 +6,17 @@
 #include <omp.h>
 
 void generate_random_data(float *data, int n) {
-    srand(time(NULL));
+    unsigned int seed = time(NULL);
+    
     #pragma omp parallel
     {
+        unsigned int thread_seed = seed + omp_get_thread_num();
+        
         #pragma omp for
         for (int i = 0; i < n; i++) {
-            data[i] = (float)rand() / RAND_MAX * 100.0f;
+            // Thread-safe random number generation
+            thread_seed = thread_seed * 1103515245 + 12345;
+            data[i] = ((float)((thread_seed / 65536) % 32768) / 32768.0f) * 100.0f;
         }
     }
 }
@@ -20,19 +25,10 @@ void find_min_max(float *data, int n, float *min_val, float *max_val) {
     float local_min = FLT_MAX;
     float local_max = -FLT_MAX;
     
-    #pragma omp parallel reduction(min:local_min) reduction(max:local_max)
-    {
-        float private_min = FLT_MAX;
-        float private_max = -FLT_MAX;
-        
-        #pragma omp for
-        for (int i = 0; i < n; i++) {
-            if (data[i] < private_min) private_min = data[i];
-            if (data[i] > private_max) private_max = data[i];
-        }
-        
-        if (private_min < local_min) local_min = private_min;
-        if (private_max > local_max) local_max = private_max;
+    #pragma omp parallel for reduction(min:local_min) reduction(max:local_max)
+    for (int i = 0; i < n; i++) {
+        if (data[i] < local_min) local_min = data[i];
+        if (data[i] > local_max) local_max = data[i];
     }
     
     *min_val = local_min;
@@ -98,10 +94,10 @@ int main(int argc, char *argv[]) {
     // Display results
     printf("OpenMP Min-Max Scaling\n");
     printf("Array size: %d\n", n);
-    printf("Number of threads: %d\n", num_threads);
+    printf("Number of threads: \033[32m%d\033[0m\n", num_threads);
     printf("Min value: %.4f\n", min_val);
     printf("Max value: %.4f\n", max_val);
-    printf("Time taken: %.6f seconds\n", time_taken);
+    printf("Time taken: \033[32m%.6f\033[0m seconds\n", time_taken);
     
     // Verify first 5 values
     printf("\nFirst 5 normalized values:\n");

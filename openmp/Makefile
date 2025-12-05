@@ -21,4 +21,25 @@ test_threads: $(TARGET)
 		echo ""; \
 	done
 
-.PHONY: all clean run test_threads
+test_1_2_4_8: $(TARGET)
+	@echo "==================================="
+	@echo "Running with 1 thread:"
+	@echo "==================================="
+	./$(TARGET) 100000000 1
+	@echo ""
+	@echo "==================================="
+	@echo "Running with 2 threads:"
+	@echo "==================================="
+	./$(TARGET) 100000000 2
+	@echo ""
+	@echo "==================================="
+	@echo "Running with 4 threads:"
+	@echo "==================================="
+	./$(TARGET) 100000000 4
+	@echo ""
+	@echo "==================================="
+	@echo "Running with 8 threads:"
+	@echo "==================================="
+	./$(TARGET) 100000000 8
+
+.PHONY: all clean run test_threads test_1_2_4_8

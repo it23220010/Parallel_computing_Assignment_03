@@ -101,10 +101,10 @@ int main(int argc, char *argv[]) {
     if (rank == 0) {
         printf("MPI Min-Max Scaling\n");
         printf("Array size: %d\n", n);
-        printf("Number of processes: %d\n", num_procs);
+        printf("Number of processes: \033[32m%d\033[0m\n", num_procs);
         printf("Global min value: %.4f\n", global_min);
         printf("Global max value: %.4f\n", global_max);
-        printf("Time taken: %.6f seconds\n", time_taken);
+        printf("Time taken: \033[32m%.6f\033[0m seconds\n", time_taken);
         
         // Verify first 5 values from rank 0's local data
         printf("\nFirst 5 normalized values (from rank 0):\n");

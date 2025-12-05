@@ -83,6 +83,28 @@ test_comprehensive: $(TARGET)
 		done; \
 	done
 
+# Test with block sizes 64, 128, 256, 512
+test_64_128_256_512: $(TARGET)
+	@echo "==================================="
+	@echo "Running with block size 64:"
+	@echo "==================================="
+	./$(TARGET) 100000000 64 40000
+	@echo ""
+	@echo "==================================="
+	@echo "Running with block size 128:"
+	@echo "==================================="
+	./$(TARGET) 100000000 128 40000
+	@echo ""
+	@echo "==================================="
+	@echo "Running with block size 256:"
+	@echo "==================================="
+	./$(TARGET) 100000000 256 40000
+	@echo ""
+	@echo "==================================="
+	@echo "Running with block size 512:"
+	@echo "==================================="
+	./$(TARGET) 100000000 512 40000
+
 # Run with default parameters (100M elements, 128 threads/block, 40000 blocks)
 run: all
 	./$(TARGET) 100000000 128 40000
@@ -105,4 +127,4 @@ check_cuda:
 	@echo "Checking GPU..."
 	@nvidia-smi --query-gpu=name,compute_capability --format=csv
 
-.PHONY: all clean test test_blocks test_grids test_comprehensive run debug profile fast gpu_info verbose check_cuda
+.PHONY: all clean test test_blocks test_grids test_comprehensive test_64_128_256_512 run debug profile fast gpu_info verbose check_cuda

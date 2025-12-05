@@ -12,6 +12,6 @@ clean:
 	rm -f $(TARGET) *.o
 
 run: $(TARGET)
-	./$(TARGET) 1000000
+	./$(TARGET) 100000000
 
 .PHONY: all clean run

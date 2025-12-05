@@ -32,6 +32,28 @@ test_performance: $(TARGET)
 		echo ""; \
 	done
 
+# Test with 1, 2, 4, 8 processes
+test_1_2_4_8: $(TARGET)
+	@echo "==================================="
+	@echo "Running with 1 process:"
+	@echo "==================================="
+	mpirun -np 1 ./$(TARGET) 100000000
+	@echo ""
+	@echo "==================================="
+	@echo "Running with 2 processes:"
+	@echo "==================================="
+	mpirun -np 2 ./$(TARGET) 100000000
+	@echo ""
+	@echo "==================================="
+	@echo "Running with 4 processes:"
+	@echo "==================================="
+	mpirun -np 4 ./$(TARGET) 100000000
+	@echo ""
+	@echo "==================================="
+	@echo "Running with 8 processes:"
+	@echo "==================================="
+	mpirun -np 8 ./$(TARGET) 100000000
+
 # Run with default parameters (4 processes, 100M elements)
 run: all
 	mpirun -np 4 ./$(TARGET) 100000000
@@ -44,4 +66,4 @@ debug: $(SRC)
 profile: $(SRC)
 	$(CC) -pg -O2 -Wall -Wextra -o $(TARGET)_profile $(SRC)
 
-.PHONY: all clean test test_performance run debug profile
+.PHONY: all clean test test_performance test_1_2_4_8 run debug profile
