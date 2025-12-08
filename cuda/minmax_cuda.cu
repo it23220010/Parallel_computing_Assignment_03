@@ -4,7 +4,7 @@
 #include <float.h>
 #include <cuda_runtime.h>
 
-
+//ss
 #define CHECK_CUDA(call) \
     do { \
         cudaError_t err = call; \
