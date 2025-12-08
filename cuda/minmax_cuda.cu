@@ -4,7 +4,7 @@
 #include <float.h>
 #include <cuda_runtime.h>
 
-// Error checking macro for CUDA calls
+
 #define CHECK_CUDA(call) \
     do { \
         cudaError_t err = call; \
@@ -15,17 +15,17 @@
         } \
     } while(0)
 
-// Kernel 1: Find minimum value in array
+
 __global__ void find_min_kernel(const float* data, float* min_vals, int n) {
     extern __shared__ float sdata[];
     
     int tid = threadIdx.x;
     int i = blockIdx.x * blockDim.x + tid;
     
-    // Initialize shared memory with large value
+    
     sdata[tid] = FLT_MAX;
     
-    // Each thread processes multiple elements (grid stride loop)
+    
     while (i < n) {
         if (data[i] < sdata[tid]) {
             sdata[tid] = data[i];
@@ -35,7 +35,7 @@ __global__ void find_min_kernel(const float* data, float* min_vals, int n) {
     
     __syncthreads();
     
-    // Parallel reduction in shared memory with optimized loop
+    
     for (unsigned int s = blockDim.x / 2; s > 32; s >>= 1) {
         if (tid < s) {
             if (sdata[tid + s] < sdata[tid]) {
@@ -45,7 +45,7 @@ __global__ void find_min_kernel(const float* data, float* min_vals, int n) {
         __syncthreads();
     }
     
-    // Final warp reduction (no __syncthreads needed)
+    
     if (tid < 32) {
         volatile float* smem = sdata;
         if (blockDim.x >= 64 && smem[tid + 32] < smem[tid]) smem[tid] = smem[tid + 32];
@@ -62,14 +62,14 @@ __global__ void find_min_kernel(const float* data, float* min_vals, int n) {
     }
 }
 
-// Kernel 2: Find maximum value in array
+
 __global__ void find_max_kernel(const float* data, float* max_vals, int n) {
     extern __shared__ float sdata[];
     
     int tid = threadIdx.x;
     int i = blockIdx.x * blockDim.x + tid;
     
-    // Initialize shared memory with small value
+    
     sdata[tid] = -FLT_MAX;
     
     // Each thread processes multiple elements (grid stride loop)
@@ -82,7 +82,7 @@ __global__ void find_max_kernel(const float* data, float* max_vals, int n) {
     
     __syncthreads();
     
-    // Parallel reduction in shared memory with optimized loop
+    
     for (unsigned int s = blockDim.x / 2; s > 32; s >>= 1) {
         if (tid < s) {
             if (sdata[tid + s] > sdata[tid]) {
@@ -92,7 +92,7 @@ __global__ void find_max_kernel(const float* data, float* max_vals, int n) {
         __syncthreads();
     }
     
-    // Final warp reduction (no __syncthreads needed)
+    
     if (tid < 32) {
         volatile float* smem = sdata;
         if (blockDim.x >= 64 && smem[tid + 32] > smem[tid]) smem[tid] = smem[tid + 32];
@@ -103,13 +103,13 @@ __global__ void find_max_kernel(const float* data, float* max_vals, int n) {
         if (smem[tid + 1] > smem[tid]) smem[tid] = smem[tid + 1];
     }
     
-    // Write block's max to global memory
+    
     if (tid == 0) {
         max_vals[blockIdx.x] = sdata[0];
     }
 }
 
-// Kernel 3: Normalize array using min-max scaling
+
 __global__ void normalize_kernel(float* data, int n, float min_val, float max_val) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     
@@ -125,7 +125,7 @@ __global__ void normalize_kernel(float* data, int n, float min_val, float max_va
     }
 }
 
-// Generate random data on host
+
 void generate_random_data(float* data, int n) {
     srand(time(NULL));
     for (int i = 0; i < n; i++) {
@@ -133,7 +133,7 @@ void generate_random_data(float* data, int n) {
     }
 }
 
-// Find global min from block results on CPU
+
 float find_global_min(float* block_mins, int num_blocks) {
     float global_min = FLT_MAX;
     for (int i = 0; i < num_blocks; i++) {
@@ -144,7 +144,7 @@ float find_global_min(float* block_mins, int num_blocks) {
     return global_min;
 }
 
-// Find global max from block results on CPU
+
 float find_global_max(float* block_maxs, int num_blocks) {
     float global_max = -FLT_MAX;
     for (int i = 0; i < num_blocks; i++) {
@@ -155,7 +155,7 @@ float find_global_max(float* block_maxs, int num_blocks) {
     return global_max;
 }
 
-// Validate GPU results with CPU reference
+
 void validate_results(float* gpu_data, float* cpu_data, int n) {
     int errors = 0;
     float tolerance = 1e-5f;
@@ -184,7 +184,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
-    // Parse arguments
+    
     int n = atoi(argv[1]);
     int block_size = atoi(argv[2]);
     int num_blocks = atoi(argv[3]);
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]) {
     printf("Total threads: %d\n", block_size * num_blocks);
     printf("\n");
     
-    // Allocate host memory
+
     float* h_data = (float*)malloc(n * sizeof(float));
     float* h_data_copy = (float*)malloc(n * sizeof(float));
     float* h_normalized = (float*)malloc(n * sizeof(float));
@@ -211,11 +211,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
-    // Generate random data
+    
     generate_random_data(h_data, n);
     memcpy(h_data_copy, h_data, n * sizeof(float));
     
-    // Allocate device memory
+    
     float* d_data;
     float* d_block_mins;
     float* d_block_maxs;
@@ -224,10 +224,10 @@ int main(int argc, char* argv[]) {
     CHECK_CUDA(cudaMalloc(&d_block_mins, num_blocks * sizeof(float)));
     CHECK_CUDA(cudaMalloc(&d_block_maxs, num_blocks * sizeof(float)));
     
-    // Copy data to device
+    
     CHECK_CUDA(cudaMemcpy(d_data, h_data, n * sizeof(float), cudaMemcpyHostToDevice));
     
-    // Prepare timing variables
+    
     cudaEvent_t start, stop;
     CHECK_CUDA(cudaEventCreate(&start));
     CHECK_CUDA(cudaEventCreate(&stop));
@@ -235,11 +235,11 @@ int main(int argc, char* argv[]) {
     float kernel_time = 0.0f;
     float total_time = 0.0f;
     
-    // Start total timer
+    
     clock_t cpu_start = clock();
     CHECK_CUDA(cudaEventRecord(start, 0));
     
-    // Launch min reduction kernel
+    
     dim3 grid(num_blocks);
     dim3 block(block_size);
     size_t shared_mem_size = block_size * sizeof(float);
@@ -247,41 +247,41 @@ int main(int argc, char* argv[]) {
     find_min_kernel<<<grid, block, shared_mem_size>>>(d_data, d_block_mins, n);
     CHECK_CUDA(cudaGetLastError());
     
-    // Launch max reduction kernel
+    
     find_max_kernel<<<grid, block, shared_mem_size>>>(d_data, d_block_maxs, n);
     CHECK_CUDA(cudaGetLastError());
     
-    // Copy block results to host
+    
     float* h_block_mins = (float*)malloc(num_blocks * sizeof(float));
     float* h_block_maxs = (float*)malloc(num_blocks * sizeof(float));
     
     CHECK_CUDA(cudaMemcpy(h_block_mins, d_block_mins, num_blocks * sizeof(float), cudaMemcpyDeviceToHost));
     CHECK_CUDA(cudaMemcpy(h_block_maxs, d_block_maxs, num_blocks * sizeof(float), cudaMemcpyDeviceToHost));
     
-    // Find global min and max
+
     float global_min = find_global_min(h_block_mins, num_blocks);
     float global_max = find_global_max(h_block_maxs, num_blocks);
     
-    // Launch normalization kernel
+    
     normalize_kernel<<<grid, block>>>(d_data, n, global_min, global_max);
     CHECK_CUDA(cudaGetLastError());
     
-    // Wait for all kernels to complete
+    
     CHECK_CUDA(cudaDeviceSynchronize());
     
-    // Stop timer and calculate kernel time
+    
     CHECK_CUDA(cudaEventRecord(stop, 0));
     CHECK_CUDA(cudaEventSynchronize(stop));
     CHECK_CUDA(cudaEventElapsedTime(&kernel_time, start, stop));
     
-    // Calculate total CPU time
+    
     clock_t cpu_end = clock();
     double total_cpu_time = ((double)(cpu_end - cpu_start)) / CLOCKS_PER_SEC * 1000.0; // Convert to ms
     
-    // Copy normalized data back to host
+    
     CHECK_CUDA(cudaMemcpy(h_normalized, d_data, n * sizeof(float), cudaMemcpyDeviceToHost));
     
-    // Calculate CPU reference for validation
+    
     float cpu_min = FLT_MAX;
     float cpu_max = -FLT_MAX;
     
@@ -301,7 +301,7 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    // Display results
+    
     printf("Results:\n");
     printf("  GPU Min value: %.6f\n", global_min);
     printf("  GPU Max value: %.6f\n", global_max);
@@ -309,7 +309,7 @@ int main(int argc, char* argv[]) {
     printf("  CPU Max value: %.6f\n", cpu_max);
     printf("\n");
     
-    // Display timing
+    
     printf("Performance:\n");
     printf("  Kernel execution time: \033[32m%.3f ms\033[0m\n", kernel_time);
     printf("  Total GPU time (incl. memcpy): %.3f ms\n", total_cpu_time);
@@ -317,18 +317,18 @@ int main(int argc, char* argv[]) {
            (3.0f * n * sizeof(float) / (kernel_time / 1000.0f)) / 1e9);
     printf("\n");
     
-    // Validate results
+    
     printf("Validation:\n");
     validate_results(h_normalized, cpu_normalized, n);
     printf("\n");
     
-    // Display first 5 normalized values
+    
     printf("First 5 normalized values:\n");
     for (int i = 0; i < 5 && i < n; i++) {
         printf("  data[%d] = %.6f\n", i, h_normalized[i]);
     }
     
-    // Cleanup
+    
     free(h_data);
     free(h_data_copy);
     free(h_normalized);
@@ -342,7 +342,7 @@ int main(int argc, char* argv[]) {
     CHECK_CUDA(cudaEventDestroy(start));
     CHECK_CUDA(cudaEventDestroy(stop));
     
-    // Reset device for clean exit
+    
     CHECK_CUDA(cudaDeviceReset());
     
     return 0;
