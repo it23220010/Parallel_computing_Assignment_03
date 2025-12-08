@@ -14,7 +14,7 @@ void generate_random_data(float *data, int n) {
         
         #pragma omp for
         for (int i = 0; i < n; i++) {
-            // Thread-safe random number generation
+            
             thread_seed = thread_seed * 1103515245 + 12345;
             data[i] = ((float)((thread_seed / 65536) % 32768) / 32768.0f) * 100.0f;
         }
@@ -66,10 +66,10 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    // Set number of threads
+    
     omp_set_num_threads(num_threads);
     
-    // Allocate memory
+    
     float *data = (float*)malloc(n * sizeof(float));
     if (data == NULL) {
         printf("Memory allocation failed\n");
@@ -78,20 +78,20 @@ int main(int argc, char *argv[]) {
     
     double start_time = omp_get_wtime();
     
-    // Generate data
+    
     generate_random_data(data, n);
     
-    // Find min and max
+    
     float min_val, max_val;
     find_min_max(data, n, &min_val, &max_val);
     
-    // Normalize
+    
     minmax_normalize(data, n, min_val, max_val);
     
     double end_time = omp_get_wtime();
     double time_taken = end_time - start_time;
     
-    // Display results
+    
     printf("OpenMP Min-Max Scaling\n");
     printf("Array size: %d\n", n);
     printf("Number of threads: \033[32m%d\033[0m\n", num_threads);
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
     printf("Max value: %.4f\n", max_val);
     printf("Time taken: \033[32m%.6f\033[0m seconds\n", time_taken);
     
-    // Verify first 5 values
+    
     printf("\nFirst 5 normalized values:\n");
     for (int i = 0; i < 5 && i < n; i++) {
         printf("data[%d] = %.6f\n", i, data[i]);
